@@ -19,7 +19,8 @@
     this._buckets = [this._createBucket()];
     this._state = CircuitBreaker.CLOSED;
 
-    this._startTicker();
+    this._lastUpdate = now();
+    this._totalBucketsUsed = 0;
   };
 
   CircuitBreaker.OPEN = 0;
@@ -30,6 +31,7 @@
   // ----------
 
   CircuitBreaker.prototype.run = function(command, fallback) {
+    this._updateBuckets();
     if (this.isOpen()) {
       this._executeFallback(fallback || function() {});
     }
@@ -60,30 +62,28 @@
   // Private API
   // -----------
 
-  CircuitBreaker.prototype._startTicker = function() {
-    var self = this;
-    var bucketIndex = 0;
-    var bucketDuration = this.windowDuration / this.numBuckets;
+  CircuitBreaker.prototype._updateBuckets = function() {
+    var timeSinceLastBucket = now() - this._lastUpdate,
+        bucketDuration = this.windowDuration / this.numBuckets,
+        bucketsNeeded = Math.floor(timeSinceLastBucket / bucketDuration);
 
-    var tick = function() {
-      if (self._buckets.length > self.numBuckets) {
-        self._buckets.shift();
-      }
+    for (var i = 0; i < bucketsNeeded; i++) {
+      this._pushBucket();
+    }
+  };
 
-      bucketIndex++;
+  CircuitBreaker.prototype._pushBucket = function() {
+    // add the bucket
+    this._buckets.push(this._createBucket());
+    if (this._buckets.length > this.numBuckets) {
+      this._buckets.shift();
+    }
 
-      if (bucketIndex > self.numBuckets) {
-        bucketIndex = 0;
-
-        if (self.isOpen()) {
-          self._state = CircuitBreaker.HALF_OPEN;
-        }
-      }
-
-      self._buckets.push(self._createBucket());
-    };
-
-    setInterval(tick, bucketDuration);
+    // handle half-opening every once in a while
+    this._totalBucketsUsed++;
+    if (this.isOpen() && (this._totalBucketsUsed % this.numBuckets === 0)) {
+      this._state = CircuitBreaker.HALF_OPEN;
+    }
   };
 
   CircuitBreaker.prototype._createBucket = function() {
@@ -177,6 +177,10 @@
     else {
       window[name] = obj;
     }
+  };
+
+  var now = function() {
+    return (new Date()).getTime();
   };
 
   assign('CircuitBreaker', CircuitBreaker);
