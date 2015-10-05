@@ -2,6 +2,7 @@
 
 [Hystrix](https://github.com/Netflix/Hystrix)-like circuit breaker for JavaScript.
 
+This fork removes the usage of setInterval() from the code completely, preventing hangs when use in Node.js contexts.
 
 ## Usage
 
