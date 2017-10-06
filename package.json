@@ -1,5 +1,5 @@
 {
-  "name":        "circuit-breaker-js",
+  "name":        "@wasyl/circuit-breaker-js",
   "description": "Hystrix-like circuit breaker for JavaScript.",
   "version":     "0.0.2",
   "license":     "MIT",
@@ -8,7 +8,7 @@
 
   "repository": {
     "type": "git",
-    "url":  "git@github.int.yammer.com:yammer/circuit-breaker-js.git"
+    "url":  "git@github.com/Schibsted-Tech-Polska/circuit-breaker-js"
   },
 
   "main": "circuit-breaker.js",
